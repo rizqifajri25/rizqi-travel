@@ -15,12 +15,39 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = (process.env.CLIENT_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+// (opsional) domain prod kamu (kalau sudah fix)
+const PROD_ORIGIN = "https://rizqi-travel.vercel.app";
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+    origin(origin, cb) {
+      // allow requests without origin (curl/postman/server-to-server)
+      if (!origin) return cb(null, true);
+
+      // allow localhost dev
+      if (origin === "http://localhost:5173") return cb(null, true);
+
+      // allow prod domain
+      if (origin === PROD_ORIGIN) return cb(null, true);
+
+      // allow any origins explicitly listed in env
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+
+      // ✅ allow Vercel preview domains (biar gak perlu update env tiap deploy)
+      // contoh: https://rizqi-travel-xxxxx-rizqifajri25s-projects.vercel.app
+      if (origin.endsWith(".vercel.app")) return cb(null, true);
+
+      return cb(new Error(`CORS blocked: ${origin}`));
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use("/api/admin", adminRoutes);
 
