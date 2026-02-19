@@ -79,3 +79,26 @@ body {
   @apply bg-slate-950 text-slate-100;
 }
 
+@keyframes waWiggle {
+  0%, 90%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  92% { transform: translateY(-2px) rotate(-6deg) scale(1.03); }
+  94% { transform: translateY(2px) rotate(6deg) scale(1.03); }
+  96% { transform: translateY(-2px) rotate(-4deg) scale(1.02); }
+  98% { transform: translateY(1px) rotate(4deg) scale(1.02); }
+}
+
+@keyframes waGlow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.18); }
+}
+
+.wa-wiggle {
+  animation: waWiggle 2s infinite;
+}
+
+.wa-glow {
+  background: radial-gradient(circle, rgba(16,185,129,0.9) 0%, rgba(16,185,129,0.25) 45%, rgba(16,185,129,0) 70%);
+  animation: waGlow 2s infinite;
+}
+
+

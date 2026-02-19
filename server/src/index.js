@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
+import promoRoutes from "./routes/promo.routes.js";
 import { sequelize } from "./lib/db.js";
 import { seedIfEmpty } from "./lib/seed.js";
 
@@ -50,7 +50,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/promos", promoRoutes);
 app.get("/api/health", (req, res) => res.json({ ok: true, name: "Rizqi Travel API" }));
 
 app.use("/api/auth", authRoutes);

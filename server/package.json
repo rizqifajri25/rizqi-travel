@@ -2,7 +2,6 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
-  
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
@@ -21,6 +20,7 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.18.0",
     "pg-hstore": "^2.3.4",
+    "resend": "^6.9.2",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {

@@ -1,24 +1,45 @@
 import { Router } from "express";
-import { body, validationResult } from "express-validator";
 import { Subscriber } from "../models/Subscriber.js";
+import { Promo } from "../models/Promo.js";
+import { sendPromoEmail } from "../lib/mailer.js";
 
 const router = Router();
 
-router.post(
-  "/",
-  body("email").isEmail(),
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ message: "Email tidak valid" });
+router.post("/", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email wajib diisi" });
 
-    const { email } = req.body;
+  try {
+    const [sub, created] = await Subscriber.findOrCreate({
+      where: { email },
+      defaults: { email },
+    });
 
-    const existing = await Subscriber.findOne({ where: { email } });
-    if (existing) return res.status(200).json({ ok: true, message: "Email sudah terdaftar" });
+    const promo = await Promo.findOne({
+      where: { isActive: true },
+      order: [["createdAt", "DESC"]],
+    });
 
-    await Subscriber.create({ email });
-    res.json({ ok: true, message: "Berhasil daftar promo!" });
+    const promoTitle = promo?.title || "Info Promo Rizqi Travel";
+    const promoDesc =
+      promo?.description ||
+      "Terima kasih sudah subscribe! Kami akan kirim info promo terbaru Haji & Umroh.";
+    const promoTerms = promo?.terms || "";
+
+    await sendPromoEmail({
+      to: email,
+      promoTitle,
+      promoDesc: promoTerms ? `${promoDesc}<br/><br/><b>S&K:</b><br/>${promoTerms}` : promoDesc,
+    });
+
+    return res.json({
+      ok: true,
+      message: created ? "Berhasil subscribe + email terkirim" : "Email sudah terdaftar, email promo terkirim",
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Gagal subscribe / kirim email" });
   }
-);
+});
 
 export default router;
