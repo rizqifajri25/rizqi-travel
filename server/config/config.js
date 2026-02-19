@@ -1,18 +1,16 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+const base = {
+  url: process.env.DATABASE_URL,
+  dialect: "postgres",
+  logging: false,
+  dialectOptions: {
+    ssl: { require: true, rejectUnauthorized: false },
+  },
+};
+
 export default {
-  development: {
-    url: process.env.DATABASE_URL,
-    dialect: "postgres",
-    logging: false,
-  },
-  production: {
-    url: process.env.DATABASE_URL,
-    dialect: "postgres",
-    logging: false,
-    dialectOptions: {
-      ssl: { require: true, rejectUnauthorized: false },
-    },
-  },
+  development: base,
+  production: base,
 };
