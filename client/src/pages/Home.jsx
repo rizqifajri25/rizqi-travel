@@ -7,6 +7,7 @@ import Contact from "../components/Contact.jsx";
 import ServiceCard from "../components/ServiceCard.jsx";
 import BookingModal from "../components/BookingModal.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import WhatsAppFloat from "../components/WhatsAppFloat.jsx";
 
 export default function Home() {
   const [bootLoading, setBootLoading] = useState(true);
@@ -94,6 +95,9 @@ export default function Home() {
         pkg={selected}
         onClose={() => setOpenModal(false)}
       />
+      <WhatsAppFloat />
     </div>
+    
+    
   );
 }
