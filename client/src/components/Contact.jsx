@@ -36,7 +36,7 @@ export default function Contact() {
         </div>
 
         <footer className="mt-10 border-t border-white/10 py-8 text-center text-sm text-slate-400">
-          © 2026 RizqiTravel.com
+          © 2026 rizqi-travel.vercel.app
         </footer>
       </div>
     </section>
