@@ -8,6 +8,7 @@ import ServiceCard from "../components/ServiceCard.jsx";
 import BookingModal from "../components/BookingModal.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import WhatsAppFloat from "../components/WhatsAppFloat.jsx";
+import Kaaba3D from "../components/Kaaba3D.jsx";
 
 export default function Home() {
   const [bootLoading, setBootLoading] = useState(true);
@@ -54,8 +55,9 @@ export default function Home() {
     <div className="min-h-screen">
       {bootLoading && <LoadingScreen />}
       <Navbar />
+      
       <Hero onCta={() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" })} />
-
+      
       <section id="services" className="mt-16">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -70,8 +72,11 @@ export default function Home() {
               {loading ? "Loading..." : "Refresh"}
             </button>
           </div>
+          <div className="hidden md:block mt-6">
+            <Kaaba3D />
+          </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
             {packages.length === 0 && !loading ? (
               <>
                 <div className="h-40 animate-pulse rounded-3xl border border-white/10 bg-white/5" />

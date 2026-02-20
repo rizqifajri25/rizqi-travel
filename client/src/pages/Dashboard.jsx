@@ -43,12 +43,106 @@ export default function Dashboard() {
     setSubscribers(res.data.subscribers || []);
   }
 
-  async function refresh() {
+    // ===== PROMOS =====
+  const [promos, setPromos] = useState([]);
+
+  const [promoCreate, setPromoCreate] = useState({
+    title: "",
+    description: "",
+    terms: "",
+    validFrom: "",
+    validTo: "",
+    ctaText: "Klaim Promo via WhatsApp",
+    isActive: true,
+  });
+
+  const [promoEditOpen, setPromoEditOpen] = useState(false);
+  const [promoEdit, setPromoEdit] = useState(null);
+
+  async function loadPromos() {
+    const res = await api.get("/promos/admin/all");
+    setPromos(res.data.promos || []);
+  }
+
+  async function addPromo(e) {
+    e.preventDefault();
+    try {
+      await api.post("/promos", promoCreate);
+      toast.success("Promo dibuat");
+      setPromoCreate({
+        title: "",
+        description: "",
+        terms: "",
+        validFrom: "",
+        validTo: "",
+        ctaText: "Klaim Promo via WhatsApp",
+        isActive: true,
+      });
+      await loadPromos();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Gagal membuat promo");
+    }
+  }
+
+  function openEditPromo(p) {
+    setPromoEdit({
+      id: p.id,
+      title: p.title || "",
+      description: p.description || "",
+      terms: p.terms || "",
+      validFrom: p.validFrom || "",
+      validTo: p.validTo || "",
+      ctaText: p.ctaText || "Klaim Promo via WhatsApp",
+      isActive: !!p.isActive,
+    });
+    setPromoEditOpen(true);
+  }
+
+  async function savePromoEdit(e) {
+    e.preventDefault();
+    try {
+      await api.put(`/promos/${promoEdit.id}`, promoEdit);
+      toast.success("Promo diupdate");
+      setPromoEditOpen(false);
+      await loadPromos();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Gagal update promo");
+    }
+  }
+
+  async function togglePromo(id) {
+    try {
+      await api.patch(`/promos/${id}/toggle`);
+      toast.success("Status promo diubah");
+      await loadPromos();
+      // update state modal biar label tombol langsung berubah
+      setPromoEdit((p) => (p && p.id === id ? { ...p, isActive: !p.isActive } : p));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Gagal toggle promo");
+    }
+  }
+
+  async function deletePromo(id) {
+    const ok = confirm("Hapus promo ini?");
+    if (!ok) return;
+
+    try {
+      await api.delete(`/promos/${id}`);
+      toast.success("Promo dihapus");
+      setPromoEditOpen(false);
+      await loadPromos();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Gagal hapus promo");
+    }
+  }
+
+    async function refresh() {
     setLoading(true);
     try {
       if (tab === "packages") await loadPackages();
       if (tab === "bookings") await loadBookings();
       if (tab === "subscribers") await loadSubscribers();
+      if (tab === "promos") await loadPromos(); // ✅ tambah ini
     } catch (err) {
       toast.error(err?.response?.data?.message || "Gagal load data (cek token / role admin)");
     } finally {
@@ -126,6 +220,7 @@ export default function Dashboard() {
       { key: "packages", label: "Packages" },
       { key: "bookings", label: "Bookings" },
       { key: "subscribers", label: "Subscribers" },
+      { key: "promos", label: "Promos" }, // ✅
     ],
     []
   );
@@ -327,6 +422,290 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+                {/* Promos */}
+        {tab === "promos" && (
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {/* Create Promo */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+              <h2 className="text-lg font-semibold">Buat Promo</h2>
+
+              <form onSubmit={addPromo} className="mt-4 grid gap-3">
+                <div>
+                  <label className="text-sm text-slate-300">Judul Promo</label>
+                  <input
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    value={promoCreate.title}
+                    onChange={(e) => setPromoCreate((p) => ({ ...p, title: e.target.value }))}
+                    placeholder="Contoh: Promo Umroh Hemat Kuota Terbatas"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-300">Deskripsi</label>
+                  <textarea
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    rows={4}
+                    value={promoCreate.description}
+                    onChange={(e) => setPromoCreate((p) => ({ ...p, description: e.target.value }))}
+                    placeholder="Contoh: Diskon biaya paket + bonus perlengkapan..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-300">Syarat & Ketentuan (opsional)</label>
+                  <textarea
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    rows={4}
+                    value={promoCreate.terms}
+                    onChange={(e) => setPromoCreate((p) => ({ ...p, terms: e.target.value }))}
+                    placeholder="Contoh: DP minimal 5 juta, kuota terbatas..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-slate-300">Berlaku dari</label>
+                    <input
+                      type="date"
+                      className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                      value={promoCreate.validFrom}
+                      onChange={(e) => setPromoCreate((p) => ({ ...p, validFrom: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-300">Sampai</label>
+                    <input
+                      type="date"
+                      className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                      value={promoCreate.validTo}
+                      onChange={(e) => setPromoCreate((p) => ({ ...p, validTo: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-300">CTA Text</label>
+                  <input
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    value={promoCreate.ctaText}
+                    onChange={(e) => setPromoCreate((p) => ({ ...p, ctaText: e.target.value }))}
+                    placeholder="Contoh: Klaim Promo via WhatsApp"
+                  />
+                </div>
+
+                <button className="rounded-2xl bg-gradient-to-r from-sky-400 to-indigo-500 px-5 py-3 font-semibold text-slate-950 hover:opacity-90">
+                  Simpan Promo
+                </button>
+              </form>
+            </div>
+
+            {/* List Promos */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+              <div className="flex items-end justify-between gap-3">
+                <h2 className="text-lg font-semibold">Daftar Promo</h2>
+                <div className="text-xs text-slate-400">Klik promo untuk edit + preview email</div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {promos.map((p) => (
+                  <div key={p.id} className="rounded-2xl border border-white/10 bg-slate-950 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xs text-slate-400">
+                          <span className={p.isActive ? "text-emerald-300" : "text-amber-300"}>
+                            {p.isActive ? "ACTIVE" : "INACTIVE"}
+                          </span>
+                          {(p.validFrom || p.validTo) && (
+                            <span className="ml-2">
+                              • {p.validFrom || "?"} → {p.validTo || "?"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-semibold">{p.title}</div>
+                        <div className="mt-1 text-sm text-slate-300 line-clamp-2">{p.description}</div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <div className="text-xs text-slate-400">CTA</div>
+                        <div className="text-sm text-white/90">{p.ctaText}</div>
+
+                        <div className="mt-3 flex gap-2 justify-end">
+                          <button
+                            onClick={() => openEditPromo(p)}
+                            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10"
+                          >
+                            Edit + Preview
+                          </button>
+                          <button
+                            onClick={() => togglePromo(p.id)}
+                            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10"
+                          >
+                            {p.isActive ? "Nonaktif" : "Aktifkan"}
+                          </button>
+                          <button
+                            onClick={() => deletePromo(p.id)}
+                            className="rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-xs hover:bg-rose-400/15"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {promos.length === 0 && <div className="text-slate-300">Belum ada promo.</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+                {/* Promo Edit + Preview Modal */}
+        <Modal open={promoEditOpen} title="Edit Promo + Preview Email" onClose={() => setPromoEditOpen(false)}>
+          {promoEdit && (
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Form Edit */}
+              <form onSubmit={savePromoEdit} className="grid gap-3">
+                <div>
+                  <label className="text-sm text-slate-300">Judul</label>
+                  <input
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    value={promoEdit.title}
+                    onChange={(e) => setPromoEdit((p) => ({ ...p, title: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-300">Deskripsi</label>
+                  <textarea
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    rows={4}
+                    value={promoEdit.description}
+                    onChange={(e) => setPromoEdit((p) => ({ ...p, description: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-300">S&K</label>
+                  <textarea
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    rows={4}
+                    value={promoEdit.terms}
+                    onChange={(e) => setPromoEdit((p) => ({ ...p, terms: e.target.value }))}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-slate-300">Berlaku dari</label>
+                    <input
+                      type="date"
+                      className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                      value={promoEdit.validFrom}
+                      onChange={(e) => setPromoEdit((p) => ({ ...p, validFrom: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-300">Sampai</label>
+                    <input
+                      type="date"
+                      className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                      value={promoEdit.validTo}
+                      onChange={(e) => setPromoEdit((p) => ({ ...p, validTo: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-300">CTA Text</label>
+                  <input
+                    className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 outline-none"
+                    value={promoEdit.ctaText}
+                    onChange={(e) => setPromoEdit((p) => ({ ...p, ctaText: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button className="rounded-2xl bg-gradient-to-r from-sky-400 to-indigo-500 px-5 py-3 font-semibold text-slate-950 hover:opacity-90">
+                    Simpan
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => togglePromo(promoEdit.id)}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm hover:bg-white/10"
+                  >
+                    {promoEdit.isActive ? "Nonaktifkan" : "Aktifkan"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => deletePromo(promoEdit.id)}
+                    className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-5 py-3 text-sm hover:bg-rose-400/15"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </form>
+
+              {/* Preview Email */}
+              <div className="rounded-2xl border border-white/10 bg-slate-950 p-4">
+                <div className="text-xs text-slate-400">Preview Email</div>
+
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white p-4 text-slate-900">
+                  <div style={{ fontFamily: "Inter, Arial, sans-serif", lineHeight: 1.6 }}>
+                    <h2 style={{ margin: "0 0 8px" }}>🔥 {promoEdit.title || "Judul Promo"}</h2>
+
+                    {(promoEdit.validFrom || promoEdit.validTo) && (
+                      <div style={{ color: "#64748b", fontSize: 12, marginBottom: 10 }}>
+                        Berlaku: {promoEdit.validFrom || "?"} — {promoEdit.validTo || "?"}
+                      </div>
+                    )}
+
+                    <p style={{ margin: "0 0 14px" }}>
+                      {promoEdit.description || "Deskripsi promo akan tampil di sini."}
+                    </p>
+
+                    {promoEdit.terms?.trim() && (
+                      <>
+                        <p style={{ margin: "0 0 6px" }}>
+                          <b>Syarat & Ketentuan:</b>
+                        </p>
+                        <p style={{ margin: "0 0 14px", whiteSpace: "pre-wrap" }}>{promoEdit.terms}</p>
+                      </>
+                    )}
+
+                    <div
+                      style={{
+                        display: "inline-block",
+                        background: "#10b981",
+                        color: "#ffffff",
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        fontWeight: 700,
+                        fontSize: 14,
+                      }}
+                    >
+                      {promoEdit.ctaText || "Klaim Promo via WhatsApp"}
+                    </div>
+
+                    <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "16px 0" }} />
+                    <small style={{ color: "#64748b" }}>Rizqi Travel • Haji & Umroh • Palembang</small>
+                  </div>
+                </div>
+
+                <div className="mt-3 text-xs text-slate-400">
+                  Email yang terkirim ke subscriber akan mengikuti isi promo aktif terbaru.
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal>
 
         {/* Edit Modal */}
         <Modal open={editOpen} title="Edit Paket" onClose={() => setEditOpen(false)}>
