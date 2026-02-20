@@ -165,7 +165,7 @@ export default function Kaaba3D({ className = "" }) {
         <div className="rt-hero-text text-2xl font-semibold tracking-tight md:text-3xl">
             <TypingText
             text="Percayakan Ibadah Haji & Umroh Anda"
-            speed={55}
+            speed={100}
             startDelay={450}
             fadeIn
             cursor
@@ -177,8 +177,8 @@ export default function Kaaba3D({ className = "" }) {
         <div className="mt-2 rt-hero-text text-xl md:text-2xl">
             <TypingText
             text="Bersama "
-            speed={58}
-            startDelay={2000}
+            speed={150}
+            startDelay={4500}
             fadeIn
             cursor={false}
             className="rt-shine-soft"
@@ -186,8 +186,8 @@ export default function Kaaba3D({ className = "" }) {
             <span className="font-semibold">
             <TypingText
                 text="Rizqi Travel"
-                speed={58}
-                startDelay={2200}
+                speed={150}
+                startDelay={6500}
                 fadeIn
                 cursor
                 stopCursorOnDone={false}
